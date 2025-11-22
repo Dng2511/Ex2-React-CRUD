@@ -1,4 +1,5 @@
 import React from 'react';
+import { Api } from "../services/Api";
 
 function AddUser({ onAdd }) {
     const [adding, setAdding] = React.useState(false);
@@ -15,19 +16,30 @@ function AddUser({ onAdd }) {
             setUser({ ...user, [id]: value });
         }
     };
-    const handleAdd = () => {
+    const [saving, setSaving] = React.useState(false);
+    const handleAdd = async () => {
         if (user.name === "" || user.username === "") {
             alert("Vui lòng nhập Name và Username!");
             return;
         }
-        onAdd(user);
-        setUser({
-            name: "", username: "", email: "", address: {
-                street: "",
-                suite: "", city: ""
-            }, phone: "", website: ""
-        });
-        setAdding(false);
+        setSaving(true);
+        try {
+            const created = await Api.createUser(user);
+            // jsonplaceholder returns created resource with id
+            onAdd(created);
+            setUser({
+                name: "", username: "", email: "", address: {
+                    street: "",
+                    suite: "", city: ""
+                }, phone: "", website: ""
+            });
+            setAdding(false);
+        } catch (err) {
+            console.error(err);
+            alert("Lỗi khi thêm người dùng. Kiểm tra console.");
+        } finally {
+            setSaving(false);
+        }
     };
     return (
     <div>
@@ -51,7 +63,7 @@ function AddUser({ onAdd }) {
                 <input id="phone" type="text" value={user.phone} onChange={handleChange} /><br />
                 <label>Website: </label>
                 <input id="website" type="text" value={user.website} onChange={handleChange} /><br />
-                <button onClick={handleAdd}>Lưu</button>
+                <button onClick={handleAdd} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</button>
             </div>
         )}
     </div>
